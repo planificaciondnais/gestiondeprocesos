@@ -1,0 +1,5 @@
+{
+  "name": "Seguimiento de Procesos de Salud",
+  "description": "Sistema de gestión y seguimiento de certificaciones para la Dirección Nacional de Atención Integral en Salud, permitiendo el rastreo cronológico de hitos administrativos.",
+  "requestFramePermissions": []
+}

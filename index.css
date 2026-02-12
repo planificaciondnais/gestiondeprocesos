@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --color-institutional-primary: #00205B;
+  --color-institutional-secondary: #C5A059;
+  --color-institutional-gray: #9DA3A7;
+  --font-sans: 'Inter', sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-gray-100;
+  }
+}

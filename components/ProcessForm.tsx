@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { PlusCircle, DollarSign, FileText, Calendar } from 'lucide-react';
+import { PlusCircle, DollarSign, FileText } from 'lucide-react';
 import { HealthProcess } from '../types';
 
 interface ProcessFormProps {
@@ -10,22 +10,19 @@ interface ProcessFormProps {
 const ProcessForm: React.FC<ProcessFormProps> = ({ onAdd }) => {
   const [name, setName] = useState('');
   const [budget, setBudget] = useState('');
-  const [memoArrivalDate, setMemoArrivalDate] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !budget || !memoArrivalDate) return;
+    if (!name || !budget) return;
 
     onAdd({
       name,
       budget: parseFloat(budget),
-      memoArrivalDate
     });
 
     setName('');
     setBudget('');
-    setMemoArrivalDate('');
     setIsOpen(false);
   };
 
@@ -50,7 +47,7 @@ const ProcessForm: React.FC<ProcessFormProps> = ({ onAdd }) => {
         <button onClick={() => setIsOpen(false)} className="text-[10px] font-black text-gray-400 hover:text-red-500 uppercase tracking-widest">CANCELAR</button>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1">
           <label className="text-[10px] font-black text-gray-500 uppercase">Nombre del Proceso</label>
           <div className="relative">
@@ -82,21 +79,7 @@ const ProcessForm: React.FC<ProcessFormProps> = ({ onAdd }) => {
           </div>
         </div>
 
-        <div className="space-y-1">
-          <label className="text-[10px] font-black text-gray-500 uppercase">Llegada Memorando</label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-institutional-gray" />
-            <input
-              required
-              type="date"
-              value={memoArrivalDate}
-              onChange={(e) => setMemoArrivalDate(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-institutional-primary outline-none font-bold"
-            />
-          </div>
-        </div>
-
-        <div className="md:col-span-3 flex justify-end">
+        <div className="md:col-span-2 flex justify-end">
           <button
             type="submit"
             className="bg-institutional-primary hover:bg-institutional-primary/90 text-white font-black py-2.5 px-10 rounded-xl shadow-lg transition-all active:scale-95 uppercase text-xs tracking-widest border-b-4 border-institutional-secondary"

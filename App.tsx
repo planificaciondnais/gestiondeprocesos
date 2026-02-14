@@ -42,6 +42,8 @@ const App: React.FC = () => {
             budget: Number(p.budget || 0),
             finalAwardedAmount: p.finalAwardedAmount ? Number(p.finalAwardedAmount) : undefined,
             memoArrivalDate: sanitizeDate(p.memoArrivalDate),
+            marketStudyReportDate: sanitizeDate(p.marketStudyReportDate),
+            processStartDate: sanitizeDate(p.processStartDate),
             planningCertDate: sanitizeDate(p.planningCertDate),
             delegateCertDate: sanitizeDate(p.delegateCertDate),
             legalCertDate: sanitizeDate(p.legalCertDate),
@@ -78,6 +80,8 @@ const App: React.FC = () => {
           const clean = parsed.map((p: any) => ({
             ...p,
             memoArrivalDate: sanitizeDate(p.memoArrivalDate),
+            marketStudyReportDate: sanitizeDate(p.marketStudyReportDate),
+            processStartDate: sanitizeDate(p.processStartDate),
             planningCertDate: sanitizeDate(p.planningCertDate),
             delegateCertDate: sanitizeDate(p.delegateCertDate),
             legalCertDate: sanitizeDate(p.legalCertDate),
@@ -119,7 +123,7 @@ const App: React.FC = () => {
     const newProcess: HealthProcess = {
       ...data,
       id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString().split('T')[0],
     };
     const updated = [newProcess, ...processes];
     setProcesses(updated);

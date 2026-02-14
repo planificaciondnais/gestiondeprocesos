@@ -1,10 +1,11 @@
 
 export const calculateDaysBetween = (start: string, end: string | Date): number => {
+  if (!start || !end) return 0;
   const startDate = new Date(start);
   const endDate = typeof end === 'string' ? new Date(end) : end;
-  
+
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return 0;
-  
+
   const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };

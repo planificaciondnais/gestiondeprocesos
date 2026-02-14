@@ -15,7 +15,9 @@ export interface HealthProcess {
   name: string;
   budget: number;
   finalAwardedAmount?: number;
-  memoArrivalDate: string;
+  memoArrivalDate?: string;
+  marketStudyReportDate?: string;
+  processStartDate?: string;
   planningCertDate?: string;
   delegateCertDate?: string;
   legalCertDate?: string;

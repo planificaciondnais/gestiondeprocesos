@@ -57,7 +57,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({ processes }) => {
 
   const getAvgDaysPerStage = () => {
     const stages = [
-      { key: 'planningCertDate', prev: 'memoArrivalDate', label: 'Planificación' },
+      { key: 'processStartDate', prev: 'marketStudyReportDate', label: 'Inicio Proceso' },
+      { key: 'planningCertDate', prev: 'processStartDate', label: 'Planificación' },
       { key: 'procurementCertDate', prev: 'planningCertDate', label: 'Compras' },
       { key: 'financialCertDate', prev: 'procurementCertDate', label: 'Financiero' },
       { key: 'delegateCertDate', prev: 'financialCertDate', label: 'Delegado' },

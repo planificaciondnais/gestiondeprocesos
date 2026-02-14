@@ -18,16 +18,26 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
       : "bg-gray-400 text-gray-100 font-bold placeholder:text-gray-200";
   };
 
-  const calculateStepDays = (p: HealthProcess, stage: 'plan' | 'proc' | 'fin' | 'deleg' | 'legal' | 'award') => {
+  const calculateStepDays = (p: HealthProcess, stage: 'market' | 'procStart' | 'plan' | 'proc' | 'fin' | 'deleg' | 'legal' | 'award') => {
     let start = '';
     let end = '';
     let isPrevCompleted = false;
 
     switch (stage) {
+      case 'market':
+        // Informe Est. Mercado es la fecha base - no tiene días propios
+        // Los días se empiezan a contar desde esta fecha hacia adelante
+        return '---';
+      case 'procStart':
+        // Días desde estudio de mercado hasta inicio de proceso
+        start = p.marketStudyReportDate || '';
+        end = p.processStartDate || getTodayISO();
+        isPrevCompleted = !!p.marketStudyReportDate;
+        break;
       case 'plan':
-        start = p.memoArrivalDate;
+        start = p.processStartDate || '';
         end = p.planningCertDate || getTodayISO();
-        isPrevCompleted = true;
+        isPrevCompleted = !!p.processStartDate;
         break;
       case 'proc':
         start = p.planningCertDate || '';
@@ -83,7 +93,9 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
       'Nombre del Proceso',
       'Presupuesto Referencial',
       'Monto Final Adjudicado',
-      'Fecha Memo',
+      'Informe Estudio Mercado',
+      'Inicio de Proceso',
+      'Dias Inicio Proceso',
       'Cert. Planificacion',
       'Dias Planificacion',
       'Cert. Compras Publicas',
@@ -100,19 +112,23 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
     ];
 
     const dataRows = processes.map(p => {
+      const dProcStart = calculateStepDays(p, 'procStart');
       const dPlan = calculateStepDays(p, 'plan');
       const dProc = calculateStepDays(p, 'proc');
       const dFin = calculateStepDays(p, 'fin');
       const dDeleg = calculateStepDays(p, 'deleg');
       const dLegal = calculateStepDays(p, 'legal');
       const dAward = calculateStepDays(p, 'award');
-      const totalDays = calculateDaysBetween(p.memoArrivalDate, p.awardedCertDate || getTodayISO());
+      const totalStart = p.marketStudyReportDate || p.createdAt?.split('T')[0] || '';
+      const totalDays = totalStart ? calculateDaysBetween(totalStart, p.awardedCertDate || getTodayISO()) : '---';
 
       return [
         p.name,
         `$${p.budget.toLocaleString()}`,
         p.finalAwardedAmount ? `$${p.finalAwardedAmount.toLocaleString()}` : '---',
-        p.memoArrivalDate,
+        p.marketStudyReportDate || 'Pendiente',
+        p.processStartDate || 'Pendiente',
+        dProcStart,
         p.planningCertDate || 'Pendiente',
         dPlan,
         p.procurementCertDate || 'Pendiente',
@@ -147,7 +163,7 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
       const tableRows = dataRows.map(row => {
         const cells = row.map((cell, idx) => {
           let style = 'border: 1px solid #9DA3A7; padding: 8px; font-size: 9pt; text-align: center;';
-          const isCertCol = [4, 6, 8, 10, 12, 14].includes(idx);
+          const isCertCol = [3, 5, 7, 9, 11, 13, 15, 17].includes(idx);
           if (isCertCol) {
             if (cell === 'Pendiente') {
               style += 'background-color: #9CA3AF; color: #F3F4F6;';
@@ -207,10 +223,12 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[2000px]">
+        <table className="w-full text-left border-collapse min-w-[2400px]">
           <thead>
             <tr className="bg-[#f8f9fa] text-institutional-primary text-[11px] uppercase tracking-wider border-b-2 border-institutional-gray">
               <th className="p-4 border-r border-gray-200 font-black" rowSpan={2}>Detalle del Proceso</th>
+              <th className="p-2 text-center border-r border-gray-200 bg-amber-50" rowSpan={2}>Informe Est. Mercado</th>
+              <th className="p-2 text-center border-r border-gray-200 bg-emerald-50" colSpan={2}>Inicio de Proceso</th>
               <th className="p-2 text-center border-r border-gray-200 bg-institutional-primary/5" colSpan={2}>I. Planificación</th>
               <th className="p-2 text-center border-r border-gray-200 bg-institutional-gray/5" colSpan={2}>II. Compras Públicas</th>
               <th className="p-2 text-center border-r border-gray-200 bg-institutional-secondary/5" colSpan={2}>III. Financiero</th>
@@ -220,6 +238,8 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
               <th className="p-4 text-center" rowSpan={2}>Acciones</th>
             </tr>
             <tr className="bg-white text-[10px] text-gray-500 uppercase border-b border-gray-200">
+              <th className="p-3 border-r border-gray-200 text-center">Fecha</th>
+              <th className="p-3 border-r border-gray-200 text-center">Días</th>
               <th className="p-3 border-r border-gray-200 text-center">Certificación</th>
               <th className="p-3 border-r border-gray-200 text-center">Días</th>
               <th className="p-3 border-r border-gray-200 text-center">Certificación</th>
@@ -244,18 +264,44 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
                     <span className="font-black text-gray-800 uppercase text-xs">{p.name}</span>
                     <div className="flex items-center gap-3 mt-1">
                       <span className="text-[11px] text-institutional-primary font-black bg-institutional-gray/20 px-2 py-0.5 rounded">${p.budget.toLocaleString()}</span>
-                      <span className="text-[10px] text-gray-400 font-bold">MEMO: {formatDate(p.memoArrivalDate)}</span>
                     </div>
                   </div>
+                </td>
+
+                {/* Informe Estudio de Mercado - Fecha */}
+                <td className="p-2 border-r border-gray-200 text-center w-36">
+                  <input
+                    type="date"
+                    value={p.marketStudyReportDate || ''}
+                    onChange={(e) => onUpdate(p.id, 'marketStudyReportDate', e.target.value)}
+                    className={`w-full text-[10px] p-2 rounded border-none outline-none text-center transition-all ${getCellStyles(!!p.marketStudyReportDate)}`}
+                  />
+                </td>
+
+
+                {/* Inicio de Proceso - Fecha */}
+                <td className="p-2 border-r border-gray-200 text-center w-36">
+                  <input
+                    type="date"
+                    disabled={!p.marketStudyReportDate}
+                    value={p.processStartDate || ''}
+                    onChange={(e) => onUpdate(p.id, 'processStartDate', e.target.value)}
+                    className={`w-full text-[10px] p-2 rounded border-none outline-none text-center transition-all ${!p.marketStudyReportDate ? 'bg-gray-300 cursor-not-allowed opacity-50' : getCellStyles(!!p.processStartDate)}`}
+                  />
+                </td>
+                {/* Inicio de Proceso - Días */}
+                <td className="p-2 border-r border-gray-200 text-center bg-gray-50/50 w-24">
+                  {renderDaysBadge(calculateStepDays(p, 'procStart'), !!p.processStartDate)}
                 </td>
 
                 {/* Etapa 1: Planificación */}
                 <td className="p-2 border-r border-gray-200 text-center w-36">
                   <input
                     type="date"
+                    disabled={!p.processStartDate}
                     value={p.planningCertDate || ''}
                     onChange={(e) => onUpdate(p.id, 'planningCertDate', e.target.value)}
-                    className={`w-full text-[10px] p-2 rounded border-none outline-none text-center transition-all ${getCellStyles(!!p.planningCertDate)}`}
+                    className={`w-full text-[10px] p-2 rounded border-none outline-none text-center transition-all ${!p.processStartDate ? 'bg-gray-300 cursor-not-allowed opacity-50' : getCellStyles(!!p.planningCertDate)}`}
                   />
                 </td>
                 <td className="p-2 border-r border-gray-200 text-center bg-gray-50/50 w-24">

@@ -3,8 +3,10 @@ const HEADERS = [
     "ID",
     "Proceso",
     "Presupuesto",
-    "Fecha Creación", // Moved here
-    "Fecha Memo",
+    "Fecha Creación",
+    "Informe Est. Mercado",
+    "Inicio Proceso",
+    "Días Inicio Proceso",
     "Cert Planificación",
     "Días Planificación",
     "Cert Compras",
@@ -32,6 +34,8 @@ function getOrCreateSheet() {
 
 const DATE_FIELDS = [
     "memoArrivalDate",
+    "marketStudyReportDate",
+    "processStartDate",
     "planningCertDate",
     "delegateCertDate",
     "legalCertDate",
@@ -45,6 +49,11 @@ function formatDateForSheet(dateStr) {
     if (!dateStr) return "";
     // Si ya viene en formato DD/MM/YYYY, devolverlo tal cual
     if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) return dateStr;
+
+    // Si viene como ISO datetime (ej: 2026-02-13T09:21:05.123Z), extraer solo la fecha
+    if (dateStr.indexOf('T') !== -1) {
+        dateStr = dateStr.split('T')[0];
+    }
 
     // Si viene en YYYY-MM-DD (del input type="date")
     const parts = dateStr.split('-');
@@ -96,7 +105,9 @@ function doGet() {
                 case "Proceso": key = "name"; break;
                 case "Presupuesto": key = "budget"; break;
                 case "Fecha Creación": key = "createdAt"; break;
-                case "Fecha Memo": key = "memoArrivalDate"; break;
+                case "Informe Est. Mercado": key = "marketStudyReportDate"; break;
+                case "Inicio Proceso": key = "processStartDate"; break;
+                case "Días Inicio Proceso": key = "processStartDays"; break;
                 case "Cert Planificación": key = "planningCertDate"; break;
                 case "Días Planificación": key = "planningDays"; break;
                 case "Cert Compras": key = "procurementCertDate"; break;
@@ -145,6 +156,17 @@ function doPost(e) {
             // Current row index for formulas (Last row + 1)
             const rowIdx = sheet.getLastRow() + 1;
 
+            // Column mapping (sin Días Est. Mercado):
+            // A=ID, B=Proceso, C=Presupuesto, D=Fecha Creación
+            // E=Informe Est. Mercado
+            // F=Inicio Proceso, G=Días Inicio Proceso
+            // H=Cert Planificación, I=Días Planificación
+            // J=Cert Compras, K=Días Compras
+            // L=Cert Financiero, M=Días Financiero
+            // N=Cert Delegado, O=Días Delegado
+            // P=Cert Jurídico, Q=Días Jurídico
+            // R=Cert Adjudicado, S=Días Adjudicada
+            // T=Monto Adjudicado
             const newRow = HEADERS.map(header => {
                 switch (header) {
                     case "ID": return payload["id"] || "";
@@ -152,44 +174,50 @@ function doPost(e) {
                     case "Presupuesto": return payload["budget"] || "";
                     case "Fecha Creación": return formatDateForSheet(payload["createdAt"]);
 
-                    case "Fecha Memo":
-                        return formatDateForSheet(payload["memoArrivalDate"]); // Col E
+                    case "Informe Est. Mercado":
+                        return formatDateForSheet(payload["marketStudyReportDate"]); // Col E
 
-                    case "Cert Planificación":
-                        return formatDateForSheet(payload["planningCertDate"]); // Col F
-                    case "Días Planificación":
-                        // Plan (F) - Memo (E)
+                    case "Inicio Proceso":
+                        return formatDateForSheet(payload["processStartDate"]); // Col F
+                    case "Días Inicio Proceso":
+                        // Inicio (F) - Est.Mercado (E)
                         return `=IF(OR(ISBLANK(F${rowIdx}), ISBLANK(E${rowIdx})), "", F${rowIdx}-E${rowIdx})`;
 
-                    case "Cert Compras":
-                        return formatDateForSheet(payload["procurementCertDate"]); // Col H
-                    case "Días Compras":
-                        // Compras (H) - Plan (F)
+                    case "Cert Planificación":
+                        return formatDateForSheet(payload["planningCertDate"]); // Col H
+                    case "Días Planificación":
+                        // Plan (H) - Inicio (F)
                         return `=IF(OR(ISBLANK(H${rowIdx}), ISBLANK(F${rowIdx})), "", H${rowIdx}-F${rowIdx})`;
 
-                    case "Cert Financiero":
-                        return formatDateForSheet(payload["financialCertDate"]); // Col J
-                    case "Días Financiero":
-                        // Fin (J) - Compras (H)
+                    case "Cert Compras":
+                        return formatDateForSheet(payload["procurementCertDate"]); // Col J
+                    case "Días Compras":
+                        // Compras (J) - Plan (H)
                         return `=IF(OR(ISBLANK(J${rowIdx}), ISBLANK(H${rowIdx})), "", J${rowIdx}-H${rowIdx})`;
 
-                    case "Cert Delegado":
-                        return formatDateForSheet(payload["delegateCertDate"]); // Col L
-                    case "Días Delegado":
-                        // Del (L) - Fin (J)
+                    case "Cert Financiero":
+                        return formatDateForSheet(payload["financialCertDate"]); // Col L
+                    case "Días Financiero":
+                        // Fin (L) - Compras (J)
                         return `=IF(OR(ISBLANK(L${rowIdx}), ISBLANK(J${rowIdx})), "", L${rowIdx}-J${rowIdx})`;
 
-                    case "Cert Jurídico":
-                        return formatDateForSheet(payload["legalCertDate"]); // Col N
-                    case "Días Jurídico":
-                        // Jur (N) - Del (L)
+                    case "Cert Delegado":
+                        return formatDateForSheet(payload["delegateCertDate"]); // Col N
+                    case "Días Delegado":
+                        // Del (N) - Fin (L)
                         return `=IF(OR(ISBLANK(N${rowIdx}), ISBLANK(L${rowIdx})), "", N${rowIdx}-L${rowIdx})`;
 
-                    case "Cert Adjudicado":
-                        return formatDateForSheet(payload["awardedCertDate"]); // Col P
-                    case "Días Adjudicada":
-                        // Adj (P) - Jur (N)
+                    case "Cert Jurídico":
+                        return formatDateForSheet(payload["legalCertDate"]); // Col P
+                    case "Días Jurídico":
+                        // Jur (P) - Del (N)
                         return `=IF(OR(ISBLANK(P${rowIdx}), ISBLANK(N${rowIdx})), "", P${rowIdx}-N${rowIdx})`;
+
+                    case "Cert Adjudicado":
+                        return formatDateForSheet(payload["awardedCertDate"]); // Col R
+                    case "Días Adjudicada":
+                        // Adj (R) - Jur (P)
+                        return `=IF(OR(ISBLANK(R${rowIdx}), ISBLANK(P${rowIdx})), "", R${rowIdx}-P${rowIdx})`;
 
                     case "Monto Adjudicado":
                         return payload["finalAwardedAmount"] || "";
@@ -209,6 +237,8 @@ function doPost(e) {
 
             let targetHeader = "";
             switch (stage) {
+                case "marketStudyReportDate": targetHeader = "Informe Est. Mercado"; break;
+                case "processStartDate": targetHeader = "Inicio Proceso"; break;
                 case "planningCertDate": targetHeader = "Cert Planificación"; break;
                 case "delegateCertDate": targetHeader = "Cert Delegado"; break;
                 case "legalCertDate": targetHeader = "Cert Jurídico"; break;

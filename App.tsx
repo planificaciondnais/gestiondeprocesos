@@ -157,7 +157,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#f3f4f6]">
       {/* Header Superior Estilo Institucional */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="w-full max-w-[1920px] mx-auto px-4 md:px-6 lg:px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 relative flex-shrink-0">
               <div className="w-full h-full flex items-center justify-center">
@@ -208,7 +208,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="w-full max-w-[1920px] mx-auto px-4 md:px-6 lg:px-8 py-8">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-institutional-primary">
             <Loader2 className="w-12 h-12 animate-spin mb-4 opacity-20" />

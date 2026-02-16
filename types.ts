@@ -4,6 +4,16 @@ export enum CertificationStatus {
   COMPLETED = 'COMPLETED'
 }
 
+export enum ProcessType {
+  INFIMA_CUANTIA = 'Ínfima Cuantía',
+  CATALOGO_ELECTRONICO = 'Catálogo Electrónico',
+  SUBASTA_INVERSA = 'Subasta Inversa',
+  CONTRATACION_DIRECTA = 'Contratación Directa',
+  LICITACION = 'Licitación',
+  MENOR_CUANTIA = 'Menor Cuantía',
+  REGIMEN_ESPECIAL = 'Régimen Especial'
+}
+
 export interface CertificationStep {
   arrivalDate: string; // Fecha en que llega el memorando o termina el paso anterior
   completionDate?: string; // Fecha de certificación
@@ -13,6 +23,8 @@ export interface CertificationStep {
 export interface HealthProcess {
   id: string;
   name: string;
+  processType: ProcessType;
+  budget: number;
   budget: number;
   finalAwardedAmount?: number;
   memoArrivalDate?: string;

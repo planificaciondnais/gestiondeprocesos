@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { PlusCircle, DollarSign, FileText } from 'lucide-react';
-import { HealthProcess } from '../types';
+import { PlusCircle, DollarSign, FileText, List } from 'lucide-react';
+import { HealthProcess, ProcessType } from '../types';
 
 interface ProcessFormProps {
   onAdd: (process: Omit<HealthProcess, 'id' | 'createdAt'>) => void;
@@ -9,19 +9,22 @@ interface ProcessFormProps {
 
 const ProcessForm: React.FC<ProcessFormProps> = ({ onAdd }) => {
   const [name, setName] = useState('');
+  const [processType, setProcessType] = useState<ProcessType | ''>('');
   const [budget, setBudget] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !budget) return;
+    if (!name || !budget || !processType) return;
 
     onAdd({
       name,
+      processType: processType as ProcessType,
       budget: parseFloat(budget),
     });
 
     setName('');
+    setProcessType('');
     setBudget('');
     setIsOpen(false);
   };
@@ -60,6 +63,24 @@ const ProcessForm: React.FC<ProcessFormProps> = ({ onAdd }) => {
               placeholder="Descripción del proceso..."
               className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-institutional-primary outline-none font-bold"
             />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[10px] font-black text-gray-500 uppercase">Tipo de Proceso</label>
+          <div className="relative">
+            <List className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-institutional-gray" />
+            <select
+              required
+              value={processType}
+              onChange={(e) => setProcessType(e.target.value as ProcessType)}
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-institutional-primary outline-none font-bold appearance-none"
+            >
+              <option value="" disabled>Seleccione el tipo...</option>
+              {Object.values(ProcessType).map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
           </div>
         </div>
 

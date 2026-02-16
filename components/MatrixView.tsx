@@ -91,6 +91,7 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
 
     const headers = [
       'Nombre del Proceso',
+      'Tipo de Proceso',
       'Presupuesto Referencial',
       'Monto Final Adjudicado',
       'Informe Estudio Mercado',
@@ -124,6 +125,7 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
 
       return [
         p.name,
+        p.processType || '---',
         `$${p.budget.toLocaleString()}`,
         p.finalAwardedAmount ? `$${p.finalAwardedAmount.toLocaleString()}` : '---',
         p.marketStudyReportDate || 'Pendiente',
@@ -163,7 +165,7 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
       const tableRows = dataRows.map(row => {
         const cells = row.map((cell, idx) => {
           let style = 'border: 1px solid #9DA3A7; padding: 8px; font-size: 9pt; text-align: center;';
-          const isCertCol = [3, 5, 7, 9, 11, 13, 15, 17].includes(idx);
+          const isCertCol = [4, 6, 8, 10, 12, 14, 16, 18].includes(idx);
           if (isCertCol) {
             if (cell === 'Pendiente') {
               style += 'background-color: #9CA3AF; color: #F3F4F6;';
@@ -227,6 +229,7 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
           <thead>
             <tr className="bg-[#f8f9fa] text-institutional-primary text-[11px] uppercase tracking-wider border-b-2 border-institutional-gray">
               <th className="p-4 border-r border-gray-200 font-black" rowSpan={2}>Detalle del Proceso</th>
+              <th className="p-4 border-r border-gray-200 font-black" rowSpan={2}>Tipo</th>
               <th className="p-2 text-center border-r border-gray-200 bg-amber-50" rowSpan={2}>Informe Est. Mercado</th>
               <th className="p-2 text-center border-r border-gray-200 bg-emerald-50" colSpan={2}>Inicio de Proceso</th>
               <th className="p-2 text-center border-r border-gray-200 bg-institutional-primary/5" colSpan={2}>I. Planificación</th>
@@ -263,9 +266,16 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
                   <div className="flex flex-col">
                     <span className="font-black text-gray-800 uppercase text-xs">{p.name}</span>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[11px] text-institutional-primary font-black bg-institutional-gray/20 px-2 py-0.5 rounded">${p.budget.toLocaleString()}</span>
+                      <span className="text-sm text-institutional-primary font-black bg-institutional-gray/20 px-2 py-0.5 rounded">${p.budget.toLocaleString()}</span>
                     </div>
                   </div>
+                </td>
+
+                {/* Tipo de Proceso */}
+                <td className="p-4 border-r border-gray-200 text-center">
+                  <span className="text-[10px] font-bold text-gray-600 uppercase bg-gray-100 px-2 py-1 rounded-lg">
+                    {p.processType || '---'}
+                  </span>
                 </td>
 
                 {/* Informe Estudio de Mercado - Fecha */}
@@ -381,7 +391,7 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
                 {/* Monto Final Adjudicado */}
                 <td className="p-2 border-r border-gray-200 text-center w-40">
                   <div className="relative">
-                    <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-institutional-gray" />
+                    <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-institutional-gray" />
                     <input
                       type="number"
                       step="0.01"
@@ -389,7 +399,7 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
                       disabled={!p.awardedCertDate}
                       value={p.finalAwardedAmount || ''}
                       onChange={(e) => onUpdate(p.id, 'finalAwardedAmount', parseFloat(e.target.value))}
-                      className={`w-full text-[10px] pl-6 pr-2 py-2 rounded border-none outline-none text-center transition-all font-black ${!p.awardedCertDate ? 'bg-gray-300 cursor-not-allowed opacity-50' : 'bg-institutional-secondary/10 text-institutional-primary focus:ring-1 focus:ring-institutional-secondary'}`}
+                      className={`w-full text-sm pl-6 pr-2 py-2 rounded border-none outline-none text-center transition-all font-black ${!p.awardedCertDate ? 'bg-gray-300 cursor-not-allowed opacity-50' : 'bg-institutional-secondary/10 text-institutional-primary focus:ring-1 focus:ring-institutional-secondary'}`}
                     />
                   </div>
                 </td>

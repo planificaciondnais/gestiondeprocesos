@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { HealthProcess, ProcessType } from '../types';
 import { calculateDaysBetween, getTodayISO, formatDate } from '../utils/dateUtils';
-import { DollarSign, Layers, TrendingUp, Activity, Clock, FileDown, Loader2, Target, BarChart4, AlertTriangle, Zap, Info, Search, Filter } from 'lucide-react';
+import { DollarSign, Layers, TrendingUp, Activity, Clock, FileDown, Loader2, Target, BarChart4, AlertTriangle, Zap, Info, Search, Filter, RotateCcw } from 'lucide-react';
 
 interface DashboardViewProps {
   processes: HealthProcess[];
@@ -113,9 +113,23 @@ const DashboardView: React.FC<DashboardViewProps> = ({ processes }) => {
   };
 
   const top5Processes = getTop5Critical();
-
-
   const stageAnalysis = getAvgDaysPerStage();
+
+  const getCategoryDistribution = () => {
+    const distribution = processTypeValues.map(type => {
+      const typeProcesses = displayedProcesses.filter(p => p.processType === type);
+      const categoryBudget = typeProcesses.reduce((acc, curr) => acc + curr.budget, 0);
+      return {
+        label: type,
+        budget: categoryBudget,
+        count: typeProcesses.length,
+        percentage: totalBudget > 0 ? (categoryBudget / totalBudget) * 100 : 0
+      };
+    });
+    return distribution.filter(d => d.count > 0).sort((a, b) => b.budget - a.budget);
+  };
+
+  const categoryDistribution = getCategoryDistribution();
 
 
 
@@ -129,20 +143,20 @@ const DashboardView: React.FC<DashboardViewProps> = ({ processes }) => {
             <Activity className="text-white w-full h-full" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-institutional-primary uppercase tracking-tighter leading-none">Reporte Gerencial de Gestión</h1>
-            <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Dirección Nacional de Atención Integral en Salud - DNAIS</p>
+            <h1 className="text-2xl font-black text-institutional-primary uppercase tracking-tighter leading-none">Reporte Gerencial de Gestión</h1>
+            <p className="text-sm text-institutional-gray font-bold uppercase tracking-widest mt-2">Dirección Nacional de Atención Integral en Salud - DNAIS</p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest">Policía Nacional del Ecuador</p>
-          <p className="text-xs font-black text-institutional-secondary">{todayLocal}</p>
+          <p className="text-xs text-institutional-gray font-black uppercase tracking-widest">Policía Nacional del Ecuador</p>
+          <p className="text-sm font-black text-institutional-secondary">{todayLocal}</p>
         </div>
       </div>
 
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 no-export-trigger">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-5 bg-institutional-secondary rounded-full"></div>
-          <h2 className="text-xs font-black text-institutional-primary uppercase tracking-widest">Indicadores de Desempeño Administrativo</h2>
+          <h2 className="text-sm font-black text-institutional-primary uppercase tracking-widest">Indicadores de Desempeño Administrativo</h2>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
@@ -154,7 +168,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ processes }) => {
                 setSelectedStatus(e.target.value);
                 setSelectedProcessId('');
               }}
-              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-700 focus:ring-2 focus:ring-institutional-secondary outline-none appearance-none cursor-pointer font-medium"
+              className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 focus:ring-2 focus:ring-institutional-secondary outline-none appearance-none cursor-pointer font-medium"
             >
               <option value="">Todos los Estados</option>
               <option value="active">🟡 Activo</option>
@@ -169,7 +183,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ processes }) => {
                 setSelectedProcessType(e.target.value);
                 setSelectedProcessId('');
               }}
-              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-700 focus:ring-2 focus:ring-institutional-secondary outline-none appearance-none cursor-pointer font-medium"
+              className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 focus:ring-2 focus:ring-institutional-secondary outline-none appearance-none cursor-pointer font-medium"
             >
               <option value="">Todos los Tipos</option>
               {processTypeValues.map(type => (
@@ -177,6 +191,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ processes }) => {
               ))}
             </select>
           </div>
+
           <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
             <select
@@ -194,129 +209,193 @@ const DashboardView: React.FC<DashboardViewProps> = ({ processes }) => {
             <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5 pointer-events-none" />
           </div>
 
+          {(selectedStatus || selectedProcessType || selectedProcessId) && (
+            <button
+              onClick={() => {
+                setSelectedStatus('');
+                setSelectedProcessType('');
+                setSelectedProcessId('');
+              }}
+              className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-institutional-secondary/20 rounded-xl text-xs font-black text-institutional-secondary uppercase hover:bg-institutional-secondary hover:text-white transition-all shadow-sm animate-in zoom-in duration-200"
+              title="Limpiar todos los filtros"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Limpiar
+            </button>
+          )}
         </div>
       </div>
 
 
-      {/* KPI Cards Principal */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <KpiCard icon={<DollarSign />} label="Presupuesto" value={<AnimatedNumber value={totalBudget} isCurrency />} color="bg-institutional-primary" />
-        <KpiCard icon={<Target />} label="Ejecución" value={<AnimatedNumber value={certifiedBudget} isCurrency />} color="bg-institutional-secondary" />
-        <KpiCard icon={<Zap />} label="Eficiencia" value={<AnimatedNumber value={executionRate} suffix="%" />} color="bg-institutional-primary/90" />
-        <KpiCard icon={<Layers />} label="En Trámite" value={<AnimatedNumber value={activeCount} />} color="bg-institutional-gray" />
-      </div>
+      {/* Command Center Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Análisis de Cuellos de Botella */}
-        <div className="lg:col-span-2 bg-gray-50/50 p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-full">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-sm font-black text-institutional-primary uppercase tracking-tight flex items-center gap-2">
-              <Clock className="w-3.5 h-3.5 text-institutional-secondary" /> Monitoreo de Tiempos por Etapa
-            </h3>
+        {/* Columna 1: KPIs Apilados + Distribución (Span 3) */}
+        <div className="lg:col-span-3 flex flex-col gap-4">
+          <KpiCard icon={<DollarSign />} label="Presupuesto" value={<AnimatedNumber value={totalBudget} isCurrency />} color="bg-institutional-primary" />
+          <KpiCard icon={<Target />} label="Ejecución" value={<AnimatedNumber value={certifiedBudget} isCurrency />} color="bg-institutional-secondary" />
+          <KpiCard icon={<Zap />} label="Eficiencia" value={<AnimatedNumber value={executionRate} suffix="%" />} color="bg-institutional-primary/90" />
+          <KpiCard icon={<Layers />} label="En Trámite" value={<AnimatedNumber value={activeCount} />} color="bg-institutional-gray" />
+
+          {/* New Visual: Distribución por Categoría */}
+          <div className="mt-4 bg-gray-50/50 p-5 rounded-3xl border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart4 className="w-5 h-5 text-institutional-secondary" />
+              <h3 className="text-xs font-black text-institutional-primary uppercase tracking-widest">Distribución por Categoría</h3>
+            </div>
+            <div className="space-y-4">
+              {categoryDistribution.map((cat, idx) => (
+                <div key={idx} className="space-y-1.5">
+                  <div className="flex justify-between items-center text-[11px] font-bold uppercase">
+                    <span className="text-institutional-primary truncate max-w-[150px]" title={cat.label}>{cat.label}</span>
+                    <span className="text-institutional-secondary">{(cat.budget / 1000).toFixed(1)}k <span className="text-[10px] text-institutional-gray">({cat.count})</span></span>
+                  </div>
+                  <div className="h-1.5 w-full bg-white rounded-full overflow-hidden border border-gray-50">
+                    <div
+                      className="h-full bg-institutional-primary rounded-full transition-all duration-1000"
+                      style={{ width: `${cat.percentage}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="space-y-3.5 flex-1">
+          <div className="mt-auto bg-institutional-primary/5 p-4 rounded-2xl border border-institutional-primary/10">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs font-black text-institutional-primary uppercase">Procesos Consolidados</span>
+              <span className="text-base font-black text-institutional-primary">{completedCount}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+              <div
+                className="bg-institutional-secondary h-full transition-all duration-1000"
+                style={{ width: `${(completedCount / (processes.length || 1)) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Columna 2: Semáforo de Tiempos (Span 6) */}
+        <div className="lg:col-span-6 bg-gray-50/50 p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-base font-black text-institutional-primary uppercase tracking-tight flex items-center gap-2">
+              <Clock className="w-5 h-5 text-institutional-secondary" /> Semáforo de Tiempos por Etapa
+            </h3>
+            <span className="text-xs font-bold text-institutional-gray uppercase">Promedio de Días</span>
+          </div>
+
+          <div className="space-y-5 flex-1 justify-center flex flex-col">
             {stageAnalysis.map((stage, idx) => (
-              <div key={idx} className="flex items-center gap-4">
-                <div className="w-24 text-[11px] font-black text-institutional-primary uppercase leading-tight">{stage.label}</div>
-                <div className="flex-1 h-2.5 bg-white rounded-full overflow-hidden border border-gray-100 shadow-inner flex">
+              <div key={idx} className="space-y-1.5">
+                <div className="flex justify-between items-end px-1">
+                  <span className="text-xs font-black text-institutional-primary uppercase tracking-wide">{stage.label}</span>
+                  <span className={`text-xs font-black ${stage.avg > 15 ? 'text-red-600' : 'text-institutional-primary'}`}>
+                    {stage.avg} DÍAS
+                  </span>
+                </div>
+                <div className="relative h-3 bg-white rounded-full overflow-hidden border border-gray-100 shadow-inner">
                   <div
                     className={`h-full transition-all duration-1000 ${stage.avg > 15 ? 'bg-red-500' : stage.avg > 7 ? 'bg-institutional-secondary' : 'bg-institutional-primary'}`}
                     style={{ width: `${Math.max(5, Math.min((stage.avg / 30) * 100, 100))}%` }}
                   ></div>
                 </div>
-                <div className="w-16 text-right">
-                  <span className={`text-[11px] font-black ${stage.avg > 15 ? 'text-red-600' : 'text-institutional-primary'}`}>
-                    {stage.avg} <span className="text-[10px] uppercase">Días</span>
-                  </span>
-                </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-5 border-t border-gray-200 pt-4">
-            <div className="flex justify-center gap-6 mb-3">
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 uppercase">
-                <div className="w-2.5 h-2.5 rounded-full bg-institutional-primary"></div> Meta Opt. (0-7 d)
+          <div className="mt-8 pt-4 border-t border-gray-200">
+            <div className="flex justify-center gap-6 mb-4">
+              <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase">
+                <div className="w-2 h-2 rounded-full bg-institutional-primary"></div> Óptimo (0-7 d)
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 uppercase">
-                <div className="w-2.5 h-2.5 rounded-full bg-institutional-secondary"></div> Preventivo (8-15 d)
+              <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase">
+                <div className="w-2 h-2 rounded-full bg-institutional-secondary"></div> Preventivo (8-15 d)
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 uppercase">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div> Correctivo (+15 d)
+              <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase">
+                <div className="w-2 h-2 rounded-full bg-red-500"></div> Crítico (+15 d)
               </div>
             </div>
 
-            <div className="bg-white/60 rounded-xl p-2 flex items-start gap-2 border border-gray-100">
-              <Info className="w-3 h-3 text-institutional-primary mt-0.5 shrink-0" />
-              <p className="text-[10px] font-medium text-gray-400 uppercase leading-tight">
-                <span className="font-black text-institutional-primary">Semáforo de Gestión:</span> Mide la agilidad del flujo administrativo. Los tramos en <span className="text-red-500 font-black">Rojo</span> requieren auditoría inmediata para evitar parálisis institucional.
+            <div className="bg-white/60 rounded-xl p-4 flex items-start gap-3 border border-gray-100">
+              <Info className="w-4 h-4 text-institutional-primary mt-0.5 shrink-0" />
+              <p className="text-xs font-medium text-institutional-gray uppercase leading-tight">
+                Análisis automático de eficiencia operativa basado en la diferencia temporal entre hitos de certificación.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Resumen de Objetivos */}
-        <div className="space-y-4">
-          <div className="bg-institutional-primary p-5 rounded-3xl text-white relative overflow-hidden shadow-xl border-b-4 border-institutional-secondary">
-            <TrendingUp className="absolute right-[-10px] bottom-[-10px] w-20 h-20 text-white opacity-5" />
-            <p className="text-[11px] font-black uppercase tracking-[0.2em] mb-4 opacity-70">Estado de Procesos</p>
-            <div className="space-y-3 relative z-10">
-              <div className="flex justify-between items-end border-b border-white/10 pb-2">
-                <span className="text-xs font-bold uppercase">Consolidados</span>
-                <span className="text-xl font-black text-institutional-secondary">{completedCount}</span>
-              </div>
-              <div className="flex justify-between items-end border-b border-white/10 pb-2">
-                <span className="text-xs font-bold uppercase">Activos</span>
-                <span className="text-xl font-black">{activeCount}</span>
-              </div>
-              <div className="pt-2">
-                <p className="text-[10px] font-medium text-gray-300 uppercase leading-relaxed italic">
-                  * Datos extraídos del sistema de vigilancia institucional.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-amber-50/50 p-4 rounded-3xl border border-amber-100 flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-            <div>
-              <p className="text-xs font-black text-amber-800 uppercase">Alerta Institucional</p>
-              <p className="text-[10px] font-bold text-amber-700 uppercase mt-0.5 leading-tight">Optimizar tiempos en etapas marcadas en rojo.</p>
-            </div>
-          </div>
-
+        {/* Columna 3: Top Críticos + Alertas (Span 3) */}
+        <div className="lg:col-span-3 space-y-4">
           <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-            <h3 className="text-xs font-black text-institutional-primary uppercase tracking-widest mb-4 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-500" />
+            <h3 className="text-sm font-black text-institutional-primary uppercase tracking-widest mb-4 flex items-center gap-2">
+              <BarChart4 className="w-5 h-5 text-red-500" />
               Top 5 Críticos
             </h3>
             <div className="space-y-3">
               {top5Processes.map((p, i) => (
-                <div key={i} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors border-b border-gray-50 last:border-0 cursor-pointer" onClick={() => setSelectedProcessId(p.id)}>
+                <div
+                  key={i}
+                  className="group flex items-center justify-between p-2.5 hover:bg-red-50 rounded-xl transition-all border-b border-gray-50 last:border-0 cursor-pointer"
+                  onClick={() => setSelectedProcessId(p.id)}
+                >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-[10px] font-black shrink-0">
+                    <div className="w-7 h-7 rounded-lg bg-red-100 text-red-600 flex items-center justify-center text-xs font-black shrink-0 group-hover:bg-red-200 transition-colors">
                       {i + 1}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold text-gray-700 truncate">{p.name.length > 30 ? p.name.substring(0, 30) + '...' : p.name}</p>
-                      <p className="text-[9px] text-gray-400 uppercase">Activo hace:</p>
+                      <p className="text-xs font-black text-gray-700 truncate">{p.name}</p>
+                      <p className="text-[10px] text-institutional-gray uppercase font-bold">Activo hace {p.daysActive} días</p>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <span className="text-xs font-black text-red-500">{p.daysActive} d</span>
-                  </div>
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               ))}
               {top5Processes.length === 0 && (
-                <p className="text-[10px] text-gray-400 text-center italic py-2">No hay procesos críticos.</p>
+                <p className="text-[10px] text-institutional-gray text-center italic py-4">No se detectan procesos críticos.</p>
               )}
             </div>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 p-5 rounded-3xl shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 bg-amber-500 rounded-lg">
+                <AlertTriangle className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-sm font-black text-amber-900 uppercase">Alertas de Gestión</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="p-3 bg-white/50 rounded-xl border border-amber-100">
+                <p className="text-[10px] font-black text-amber-800 uppercase leading-tight">Cuellos de Botella</p>
+                <p className="text-[10px] font-bold text-amber-600 uppercase mt-1 leading-tight">Optimizar etapas marcadas en rojo para evitar parálisis institucional.</p>
+              </div>
+              <div className="p-3 bg-white/50 rounded-xl border border-amber-100">
+                <p className="text-[10px] font-black text-amber-800 uppercase leading-tight">Ejecución Presupuestaria</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex-1 h-1 bg-gray-200 rounded-full">
+                    <div className="bg-amber-500 h-full rounded-full" style={{ width: `${executionRate}%` }}></div>
+                  </div>
+                  <span className="text-[9px] font-black text-amber-700">{Math.round(executionRate)}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-institutional-primary p-5 rounded-3xl text-white relative overflow-hidden shadow-xl">
+            <TrendingUp className="absolute right-[-10px] bottom-[-10px] w-16 h-16 text-white opacity-10" />
+            <p className="text-[10px] font-black uppercase tracking-widest mb-3 opacity-70">Resumen Ejecutivo</p>
+            <div className="flex justify-between items-end border-b border-white/10 pb-2 mb-2">
+              <span className="text-[10px] font-bold uppercase">Tasa Eficiencia</span>
+              <span className="text-lg font-black">{Math.round(executionRate)}%</span>
+            </div>
+            <p className="text-[9px] text-white/60 uppercase font-medium leading-tight">
+              Basado en {processes.length} procesos registrados a la fecha.
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="text-[10px] text-gray-400 text-center mt-4 border-t border-gray-100 pt-3 uppercase font-bold tracking-[0.3em]">
+      <div className="text-[10px] text-institutional-gray text-center mt-4 border-t border-gray-100 pt-3 uppercase font-bold tracking-[0.3em]">
         Documento Generado por Sistema de Vigilancia de Salud - DNAIS
       </div>
     </div >
@@ -329,8 +408,8 @@ const KpiCard = ({ icon, label, value, color }: { icon: any, label: string, valu
       {React.cloneElement(icon as React.ReactElement, { className: "w-3.5 h-3.5" })}
     </div>
     <div className="min-w-0">
-      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">{label}</p>
-      <div className="text-sm font-black text-institutional-primary truncate leading-none">{value}</div>
+      <p className="text-xs font-black text-institutional-gray uppercase tracking-widest leading-none mb-1">{label}</p>
+      <div className="text-base font-black text-institutional-primary truncate leading-none">{value}</div>
     </div>
   </div>
 );

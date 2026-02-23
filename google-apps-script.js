@@ -394,6 +394,42 @@ function doPost(e) {
                 return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Proceso actualizado" }))
                     .setMimeType(ContentService.MimeType.JSON);
             }
+        } else if (action === "edit") {
+            const payload = data.payload; // { id, name, processType, budget }
+            const id = payload.id;
+            const range = sheet.getDataRange();
+            const values = range.getValues();
+            const headers = values[0];
+
+            let rowIndex = -1;
+            for (let i = 1; i < values.length; i++) {
+                if (values[i][0] == id) {
+                    rowIndex = i + 1;
+                    break;
+                }
+            }
+
+            if (rowIndex !== -1) {
+                // Mapeo de campos a actualizar
+                const fieldMapping = {
+                    "name": "Proceso",
+                    "processType": "Tipo de Proceso",
+                    "budget": "Presupuesto"
+                };
+
+                for (let key in fieldMapping) {
+                    if (payload[key] !== undefined) {
+                        const targetHeader = fieldMapping[key];
+                        const colIndex = headers.indexOf(targetHeader);
+                        if (colIndex !== -1) {
+                            sheet.getRange(rowIndex, colIndex + 1).setValue(payload[key]);
+                        }
+                    }
+                }
+
+                return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Detalles del proceso actualizados" }))
+                    .setMimeType(ContentService.MimeType.JSON);
+            }
         } else if (action === "delete") {
             const id = data.payload.id;
             const range = sheet.getDataRange();

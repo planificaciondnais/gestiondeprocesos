@@ -70,6 +70,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({ processes }) => {
     .filter(p => !!p.awardedCertDate)
     .reduce((acc, curr) => acc + (curr.finalAwardedAmount || curr.budget), 0);
 
+  const formatToK = (val: number) => {
+    return new Intl.NumberFormat('es-EC', {
+      maximumFractionDigits: 1
+    }).format(val / 1000) + 'k';
+  };
+
   const completedCount = displayedProcesses.filter(p => !!p.awardedCertDate).length;
   const activeCount = displayedProcesses.length - completedCount;
   const executionRate = totalBudget > 0 ? (certifiedBudget / totalBudget) * 100 : 0;
@@ -248,7 +254,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ processes }) => {
                 <div key={idx} className="space-y-1.5">
                   <div className="flex justify-between items-center text-[11px] font-bold uppercase">
                     <span className="text-institutional-primary truncate max-w-[150px]" title={cat.label}>{cat.label}</span>
-                    <span className="text-institutional-secondary">{(cat.budget / 1000).toFixed(1)}k <span className="text-[10px] text-institutional-gray">({cat.count})</span></span>
+                    <span className="text-institutional-secondary">{formatToK(cat.budget)} <span className="text-[10px] text-institutional-gray">({cat.count})</span></span>
                   </div>
                   <div className="h-1.5 w-full bg-white rounded-full overflow-hidden border border-gray-50">
                     <div

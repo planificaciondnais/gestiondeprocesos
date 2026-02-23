@@ -149,6 +149,15 @@ const App: React.FC = () => {
     }
   };
 
+  const editProcess = (id: string, data: Partial<HealthProcess>) => {
+    const updated = processes.map(p =>
+      p.id === id ? { ...p, ...data } : p
+    );
+    setProcesses(updated);
+    localStorage.setItem('dnais_processes', JSON.stringify(updated));
+    syncWithBackend('edit', { id, ...data });
+  };
+
   const filteredProcesses = processes.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -236,6 +245,7 @@ const App: React.FC = () => {
               <MatrixView
                 processes={filteredProcesses}
                 onUpdate={updateProcessCertification}
+                onEdit={editProcess}
                 onDelete={deleteProcess}
               />
             </div>

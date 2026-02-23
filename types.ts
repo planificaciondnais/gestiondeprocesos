@@ -25,7 +25,6 @@ export interface HealthProcess {
   name: string;
   processType: ProcessType;
   budget: number;
-  budget: number;
   finalAwardedAmount?: number;
   memoArrivalDate?: string;
   marketStudyReportDate?: string;

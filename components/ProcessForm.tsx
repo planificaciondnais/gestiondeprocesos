@@ -4,32 +4,56 @@ import { PlusCircle, DollarSign, FileText, List } from 'lucide-react';
 import { HealthProcess, ProcessType } from '../types';
 
 interface ProcessFormProps {
-  onAdd: (process: Omit<HealthProcess, 'id' | 'createdAt'>) => void;
+  onAdd?: (process: Omit<HealthProcess, 'id' | 'createdAt'>) => void;
+  onEdit?: (id: string, data: Partial<HealthProcess>) => void;
+  initialData?: HealthProcess;
+  onCancel?: () => void;
 }
 
-const ProcessForm: React.FC<ProcessFormProps> = ({ onAdd }) => {
-  const [name, setName] = useState('');
-  const [processType, setProcessType] = useState<ProcessType | ''>('');
-  const [budget, setBudget] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
+const ProcessForm: React.FC<ProcessFormProps> = ({ onAdd, onEdit, initialData, onCancel }) => {
+  const [name, setName] = useState(initialData?.name || '');
+  const [processType, setProcessType] = useState<ProcessType | ''>(initialData?.processType || '');
+  const [budget, setBudget] = useState(initialData?.budget.toString() || '');
+  const [isOpen, setIsOpen] = useState(!!initialData);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !budget || !processType) return;
 
-    onAdd({
-      name,
-      processType: processType as ProcessType,
-      budget: parseFloat(budget),
-    });
+    if (initialData && onEdit) {
+      onEdit(initialData.id, {
+        name,
+        processType: processType as ProcessType,
+        budget: parseFloat(budget),
+      });
+    } else if (onAdd) {
+      onAdd({
+        name,
+        processType: processType as ProcessType,
+        budget: parseFloat(budget),
+      });
+      setName('');
+      setProcessType('');
+      setBudget('');
+    }
 
-    setName('');
-    setProcessType('');
-    setBudget('');
-    setIsOpen(false);
+    if (!initialData) {
+      setIsOpen(false);
+    }
   };
 
-  if (!isOpen) {
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      setIsOpen(false);
+      setName('');
+      setProcessType('');
+      setBudget('');
+    }
+  };
+
+  if (!isOpen && !initialData) {
     return (
       <button
         onClick={() => setIsOpen(true)}
@@ -42,12 +66,17 @@ const ProcessForm: React.FC<ProcessFormProps> = ({ onAdd }) => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-institutional-primary animate-in slide-in-from-top-4 duration-300">
+    <div className={`bg-white p-6 rounded-2xl ${initialData ? '' : 'shadow-xl border-t-4 border-institutional-primary animate-in slide-in-from-top-4 duration-300'}`}>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-black text-institutional-primary flex items-center gap-2 uppercase tracking-tight">
-          <PlusCircle className="text-institutional-secondary w-5 h-5" /> Datos del Nuevo Proceso
+          {initialData ? (
+            <FileText className="text-institutional-secondary w-5 h-5" />
+          ) : (
+            <PlusCircle className="text-institutional-secondary w-5 h-5" />
+          )}
+          {initialData ? 'Editar Detalle del Proceso' : 'Datos del Nuevo Proceso'}
         </h2>
-        <button onClick={() => setIsOpen(false)} className="text-[10px] font-black text-gray-400 hover:text-red-500 uppercase tracking-widest">CANCELAR</button>
+        <button onClick={handleCancel} className="text-[10px] font-black text-gray-400 hover:text-red-500 uppercase tracking-widest">CANCELAR</button>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -105,7 +134,7 @@ const ProcessForm: React.FC<ProcessFormProps> = ({ onAdd }) => {
             type="submit"
             className="bg-institutional-primary hover:bg-institutional-primary/90 text-white font-black py-2.5 px-10 rounded-xl shadow-lg transition-all active:scale-95 uppercase text-xs tracking-widest border-b-4 border-institutional-secondary"
           >
-            Insertar en Matriz
+            {initialData ? 'Guardar Cambios' : 'Insertar en Matriz'}
           </button>
         </div>
       </form>

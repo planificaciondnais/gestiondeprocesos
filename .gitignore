@@ -27,3 +27,11 @@ dist-ssr
 .env
 .env.local
 .env.*
+
+# Firebase
+.firebase
+*-debug.log
+firebase-debug.log*
+deployment_log.txt
+login_url.txt
+debug_login.bat

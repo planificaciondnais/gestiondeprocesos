@@ -22,3 +22,11 @@ export const formatDate = (dateString: string): string => {
 export const getTodayISO = (): string => {
   return new Date().toISOString().split('T')[0];
 };
+
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('es-EC', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+  }).format(amount);
+};

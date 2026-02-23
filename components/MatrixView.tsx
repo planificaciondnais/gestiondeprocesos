@@ -1,23 +1,26 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { HealthProcess } from '../types';
-import { calculateDaysBetween, formatDate, getTodayISO } from '../utils/dateUtils';
-import { Trash2, AlertCircle, Download, FileSpreadsheet, DollarSign } from 'lucide-react';
+import { calculateDaysBetween, formatDate, getTodayISO, formatCurrency } from '../utils/dateUtils';
+import { Trash2, AlertCircle, Download, FileSpreadsheet, DollarSign, Edit2, X } from 'lucide-react';
+import ProcessForm from './ProcessForm';
 
 interface MatrixViewProps {
   processes: HealthProcess[];
   onUpdate: (id: string, stage: keyof HealthProcess, value: any) => void;
+  onEdit: (id: string, data: Partial<HealthProcess>) => void;
   onDelete: (id: string) => void;
 }
 
-const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }) => {
+const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onEdit, onDelete }) => {
+  const [editingProcess, setEditingProcess] = useState<HealthProcess | null>(null);
 
   const getCellStyles = (isCertified: boolean) => {
     return isCertified
       ? "bg-institutional-primary text-white font-bold"
       : "bg-gray-400 text-gray-100 font-bold placeholder:text-gray-200";
   };
-
+  // ... (calculateStepDays and renderDaysBadge remain the same)
   const calculateStepDays = (p: HealthProcess, stage: 'market' | 'procStart' | 'plan' | 'proc' | 'fin' | 'deleg' | 'legal' | 'award') => {
     let start = '';
     let end = '';
@@ -25,11 +28,8 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
 
     switch (stage) {
       case 'market':
-        // Informe Est. Mercado es la fecha base - no tiene días propios
-        // Los días se empiezan a contar desde esta fecha hacia adelante
         return '---';
       case 'procStart':
-        // Días desde estudio de mercado hasta inicio de proceso
         start = p.marketStudyReportDate || '';
         end = p.processStartDate || getTodayISO();
         isPrevCompleted = !!p.marketStudyReportDate;
@@ -87,6 +87,7 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
   };
 
   const handleExport = (format: 'csv' | 'excel') => {
+    // ... (export logic remains the same)
     if (processes.length === 0) return;
 
     const headers = [
@@ -126,8 +127,8 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
       return [
         p.name,
         p.processType || '---',
-        `$${p.budget.toLocaleString()}`,
-        p.finalAwardedAmount ? `$${p.finalAwardedAmount.toLocaleString()}` : '---',
+        formatCurrency(p.budget),
+        p.finalAwardedAmount ? formatCurrency(p.finalAwardedAmount) : '---',
         p.marketStudyReportDate || 'Pendiente',
         p.processStartDate || 'Pendiente',
         dProcStart,
@@ -207,6 +208,30 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
 
   return (
     <div className="flex flex-col">
+      {/* Modal de Edición */}
+      {editingProcess && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl relative overflow-hidden">
+            <button
+              onClick={() => setEditingProcess(null)}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors z-10"
+            >
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
+            <div className="p-2">
+              <ProcessForm
+                initialData={editingProcess}
+                onEdit={(id, data) => {
+                  onEdit(id, data);
+                  setEditingProcess(null);
+                }}
+                onCancel={() => setEditingProcess(null)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="p-3 bg-white border-b border-gray-100 flex justify-end gap-3">
         <button
           onClick={() => handleExport('csv')}
@@ -262,11 +287,13 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
             {processes.map((p) => (
               <tr key={p.id} className="hover:bg-institutional-secondary/5 transition-colors border-b border-gray-100 group">
                 {/* Info General */}
-                <td className="p-4 border-r border-gray-200 sticky left-0 bg-white group-hover:bg-institutional-secondary/5 z-10">
+                <td className="p-4 border-r border-gray-200 sticky left-0 bg-white group-hover:bg-institutional-secondary/5 z-10 min-w-[300px]">
                   <div className="flex flex-col">
-                    <span className="font-black text-gray-800 uppercase text-xs">{p.name}</span>
+                    <span className="font-black text-gray-800 uppercase text-xs break-words">{p.name}</span>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-sm text-institutional-primary font-black bg-institutional-gray/20 px-2 py-0.5 rounded">${p.budget.toLocaleString()}</span>
+                      <span className="text-sm text-institutional-primary font-black bg-institutional-gray/20 px-2 py-0.5 rounded">
+                        {formatCurrency(p.budget)}
+                      </span>
                     </div>
                   </div>
                 </td>
@@ -406,12 +433,22 @@ const MatrixView: React.FC<MatrixViewProps> = ({ processes, onUpdate, onDelete }
 
                 {/* Acciones */}
                 <td className="p-2 text-center">
-                  <button
-                    onClick={() => onDelete(p.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => setEditingProcess(p)}
+                      className="p-2 text-gray-400 hover:text-institutional-primary transition-colors"
+                      title="Editar detalle"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => onDelete(p.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Eliminar proceso"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
